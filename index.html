@@ -8,13 +8,22 @@
     body {
       background: #111;
       color: white;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       padding: 20px;
     }
 
     h1 {
       text-align: center;
       color: #00ffcc;
+    }
+
+    #search {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
     }
 
     .file {
@@ -24,15 +33,26 @@
       border-radius: 10px;
     }
 
-    a {
-      color: black;
+    .file h3 {
+      margin: 0;
+      color: #00ffcc;
+    }
+
+    .file a {
+      display: inline-block;
+      margin-top: 6px;
       background: #00ffcc;
+      color: black;
       padding: 6px 10px;
       border-radius: 6px;
       text-decoration: none;
       font-weight: bold;
-      display: inline-block;
-      margin-top: 5px;
+    }
+
+    #message {
+      color: #aaa;
+      text-align: center;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -41,31 +61,30 @@
 
 <h1>📦 PixelArchive</h1>
 
-<div id="files">Chargement...</div>
+<input id="search" placeholder="🔍 rechercher un fichier">
 
-<!-- 🧠 LE CERVEAU DU SITE -->
+<div id="files"></div>
+<div id="message"></div>
+
 <script>
-
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1LyUjqpyXucK97PMsuQH5wjU7PQj-LWZYunfuN1Pl5NM/export?format=csv";
+
+let fichiers = [];
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(text => {
-
     const lignes = text.split("\n").slice(1);
-    const zone = document.getElementById("files");
-    zone.innerHTML = "";
 
     lignes.forEach(ligne => {
-
-      // 🔍 chercher le lien Drive dans la ligne
+      // cherche un lien drive
       const lienMatch = ligne.match(/https:\/\/drive\.google\.com[^\s"]+/);
       if (!lienMatch) return;
 
       const lien = lienMatch[0];
 
-      // 🧠 récupérer l’ID du fichier
+      // récupère l’ID
       const idMatch =
         lien.match(/id=([^&]+)/) || lien.match(/\/d\/([^/]+)/);
       if (!idMatch) return;
@@ -74,23 +93,45 @@ fetch(SHEET_URL)
       const download =
         "https://drive.google.com/uc?export=download&id=" + id;
 
-      // 📝 titre simple
+      // titre (2e colonne du form)
       const titre = ligne.split(",")[1] || "Sans titre";
 
-      zone.innerHTML += `
-        <div class="file">
-          <h3>${titre}</h3>
-          <a href="${download}" target="_blank">⬇️ Télécharger</a>
-        </div>
-      `;
+      fichiers.push({ titre, download });
     });
 
-    if (zone.innerHTML === "") {
-      zone.innerHTML = "❌ Aucun fichier trouvé";
-    }
-
+    afficher(fichiers);
   });
 
+function afficher(liste) {
+  const zone = document.getElementById("files");
+  const msg = document.getElementById("message");
+
+  zone.innerHTML = "";
+  msg.innerHTML = "";
+
+  if (liste.length === 0) {
+    msg.innerHTML = "😢 Aucun fichier trouvé";
+    return;
+  }
+
+  liste.forEach(f => {
+    zone.innerHTML += `
+      <div class="file">
+        <h3>${f.titre}</h3>
+        <a href="${f.download}" target="_blank">⬇️ Télécharger</a>
+      </div>
+    `;
+  });
+}
+
+// 🔍 recherche (NE DISPARAÎT JAMAIS)
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  const filtre = fichiers.filter(f =>
+    f.titre.toLowerCase().includes(q)
+  );
+  afficher(filtre);
+});
 </script>
 
 </body>
