@@ -6,9 +6,9 @@
 
   <style>
     body {
-      background: #0f0f0f;
+      background: #111;
       color: white;
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       padding: 20px;
     }
 
@@ -17,102 +17,81 @@
       color: #00ffcc;
     }
 
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: none;
-    }
-
     .file {
-      background: #1c1c1c;
+      background: #222;
       padding: 15px;
-      border-radius: 10px;
       margin-bottom: 10px;
+      border-radius: 10px;
     }
 
-    .file h3 {
-      margin: 0;
-      color: #00ffcc;
-    }
-
-    .file a {
-      display: inline-block;
-      margin-top: 8px;
-      background: #00ffcc;
+    a {
       color: black;
+      background: #00ffcc;
       padding: 6px 10px;
       border-radius: 6px;
       text-decoration: none;
       font-weight: bold;
+      display: inline-block;
+      margin-top: 5px;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>📦 PixelArchive</h1>
+<h1>📦 PixelArchive</h1>
 
-  <input id="search" placeholder="🔍 rechercher un fichier" />
+<div id="files">Chargement...</div>
 
-  <div id="files"></div>
+<!-- 🧠 LE CERVEAU DU SITE -->
+<script>
 
-  <script>
-    const SHEET_URL =
-      "https://docs.google.com/spreadsheets/d/1LyUjqpyXucK97PMsuQH5wjU7PQj-LWZYunfuN1Pl5NM/export?format=csv";
+const SHEET_URL =
+"https://docs.google.com/spreadsheets/d/1LyUjqpyXucK97PMsuQH5wjU7PQj-LWZYunfuN1Pl5NM/export?format=csv";
 
-    let fichiers = [];
+fetch(SHEET_URL)
+  .then(res => res.text())
+  .then(text => {
 
-    fetch(SHEET_URL)
-      .then(r => r.text())
-      .then(text => {
-        const lignes = text.split("\n").slice(1);
+    const lignes = text.split("\n").slice(1);
+    const zone = document.getElementById("files");
+    zone.innerHTML = "";
 
-        lignes.forEach(ligne => {
-          const cols = ligne.split(",");
+    lignes.forEach(ligne => {
 
-          if (cols.length < 3) return;
+      // 🔍 chercher le lien Drive dans la ligne
+      const lienMatch = ligne.match(/https:\/\/drive\.google\.com[^\s"]+/);
+      if (!lienMatch) return;
 
-          const titre = cols[1];
-          const lien = cols[2];
+      const lien = lienMatch[0];
 
-          const match = lien.match(/id=([^&]+)/) || lien.match(/\/d\/([^/]+)/);
-          if (!match) return;
+      // 🧠 récupérer l’ID du fichier
+      const idMatch =
+        lien.match(/id=([^&]+)/) || lien.match(/\/d\/([^/]+)/);
+      if (!idMatch) return;
 
-          const id = match[1];
-          const download =
-            "https://drive.google.com/uc?export=download&id=" + id;
+      const id = idMatch[1];
+      const download =
+        "https://drive.google.com/uc?export=download&id=" + id;
 
-          fichiers.push({ titre, download });
-        });
+      // 📝 titre simple
+      const titre = ligne.split(",")[1] || "Sans titre";
 
-        afficher(fichiers);
-      });
+      zone.innerHTML += `
+        <div class="file">
+          <h3>${titre}</h3>
+          <a href="${download}" target="_blank">⬇️ Télécharger</a>
+        </div>
+      `;
+    });
 
-    function afficher(liste) {
-      const zone = document.getElementById("files");
-      zone.innerHTML = "";
-
-      liste.forEach(f => {
-        zone.innerHTML += `
-          <div class="file">
-            <h3>${f.titre}</h3>
-            <a href="${f.download}" target="_blank">⬇️ Télécharger</a>
-          </div>
-        `;
-      });
+    if (zone.innerHTML === "") {
+      zone.innerHTML = "❌ Aucun fichier trouvé";
     }
 
-    document.getElementById("search").addEventListener("input", e => {
-      const q = e.target.value.toLowerCase();
-      const res = fichiers.filter(f =>
-        f.titre.toLowerCase().includes(q)
-      );
-      afficher(res);
-    });
-  </script>
+  });
+
+</script>
 
 </body>
 </html>
