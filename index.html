@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>📦 PixelArchive</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    h2 { margin-top: 40px; }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+    .button-mail {
+      display: inline-block;
+      padding: 15px;
+      background: #00ffcc;
+      color: black;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .file {
+      background: #1e1e1e;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    hr {
+      margin: 30px 0;
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📦 PixelArchive</h1>
+
+<p style="text-align:center;">
+Archive pixel pour tout stocker 😎  
+Livres 📚 • Films 🎬 • Minecraft ⛏️
+</p>
+
+<h2>➕ Ajouter un fichier</h2>
+
+<a class="button-mail"
+href="mailto:priamadx@gmail.com?subject=PixelArchive%20-%20Ajout%20de%20fichier&body=Salut%20!%0A%0AVoici%20un%20fichier%20pour%20PixelArchive.%0A%0ANom%20du%20fichier%20:%20%0ACatégorie%20:%20%0A%0AMerci%20😄">
+📤 Envoyer un fichier par mail
+</a>
+
+<hr>
+
+<h2>📂 Fichiers locaux</h2>
+
+<input type="file" id="fileInput" multiple>
+<input type="text" id="search" placeholder="🔍 Rechercher un fichier">
+
+<div id="list"></div>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const list = document.getElementById("list");
+const search = document.getElementById("search");
+
+let files = [];
+
+fileInput.addEventListener("change", () => {
+  for (let file of fileInput.files) {
+    files.push(file);
+  }
+  showFiles();
+});
+
+search.addEventListener("input", showFiles);
+
+function showFiles() {
+  list.innerHTML = "";
+  const value = search.value.toLowerCase();
+
+  files.filter(f => f.name.toLowerCase().includes(value))
+    .forEach(file => {
+      const div = document.createElement("div");
+      div.className = "file";
+      div.textContent = "⬇️ " + file.name;
+      div.onclick = () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(file);
+        a.download = file.name;
+        a.click();
+      };
+      list.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
