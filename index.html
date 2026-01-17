@@ -2,108 +2,128 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>📦 PixelArchive</title>
+  <title>PixelArchive</title>
+
   <style>
     body {
-      background: #111;
+      background: #0f0f0f;
       color: white;
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
     }
-    h1 { text-align: center; }
-    h2 { margin-top: 40px; }
+
+    h1 {
+      text-align: center;
+      color: #00ffcc;
+    }
+
     input {
       width: 100%;
       padding: 10px;
       font-size: 16px;
-      margin: 10px 0;
-      border-radius: 5px;
+      margin-bottom: 20px;
+      border-radius: 8px;
       border: none;
     }
-    .button-mail {
-      display: inline-block;
-      padding: 15px;
-      background: #00ffcc;
-      color: black;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
+
     .file {
-      background: #1e1e1e;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-      cursor: pointer;
+      background: #1c1c1c;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
     }
-    hr {
-      margin: 30px 0;
-      border: 1px solid #333;
+
+    .file h3 {
+      margin: 0;
+      color: #00ffcc;
+    }
+
+    .file p {
+      margin: 5px 0;
+      color: #aaa;
+    }
+
+    .file a {
+      display: inline-block;
+      margin-top: 5px;
+      color: white;
+      background: #00ffcc;
+      padding: 6px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .file a:hover {
+      background: #00cca3;
     }
   </style>
 </head>
+
 <body>
 
-<h1>📦 PixelArchive</h1>
+  <h1>📦 PixelArchive</h1>
 
-<p style="text-align:center;">
-Archive pixel pour tout stocker 😎  
-Livres 📚 • Films 🎬 • Minecraft ⛏️
-</p>
+  <input id="search" placeholder="🔍 Rechercher un fichier..." />
 
-<h2>➕ Ajouter un fichier</h2>
+  <div id="files"></div>
 
-<a class="button-mail"
-href="mailto:priamadx@gmail.com?subject=PixelArchive%20-%20Ajout%20de%20fichier&body=Salut%20!%0A%0AVoici%20un%20fichier%20pour%20PixelArchive.%0A%0ANom%20du%20fichier%20:%20%0ACatégorie%20:%20%0A%0AMerci%20😄">
-📤 Envoyer un fichier par mail
-</a>
+  <script>
+    const SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/1LyUjqpyXucK97PMsuQH5wjU7PQj-LWZYunfuN1Pl5NM/export?format=csv";
 
-<hr>
+    let fichiers = [];
 
-<h2>📂 Fichiers locaux</h2>
+    fetch(SHEET_URL)
+      .then(res => res.text())
+      .then(text => {
+        const lignes = text.split("\n").slice(1);
 
-<input type="file" id="fileInput" multiple>
-<input type="text" id="search" placeholder="🔍 Rechercher un fichier">
+        lignes.forEach(ligne => {
+          const cols = ligne.split(",");
+          if (cols.length < 3) return;
 
-<div id="list"></div>
+          const titre = cols[0];
+          const lien = cols[1];
+          const type = cols[2];
 
-<script>
-const fileInput = document.getElementById("fileInput");
-const list = document.getElementById("list");
-const search = document.getElementById("search");
+          const match = lien.match(/\/d\/([^/]+)/);
+          if (!match) return;
 
-let files = [];
+          const id = match[1];
+          const download =
+            "https://drive.google.com/uc?export=download&id=" + id;
 
-fileInput.addEventListener("change", () => {
-  for (let file of fileInput.files) {
-    files.push(file);
-  }
-  showFiles();
-});
+          fichiers.push({ titre, type, download });
+        });
 
-search.addEventListener("input", showFiles);
+        afficher(fichiers);
+      });
 
-function showFiles() {
-  list.innerHTML = "";
-  const value = search.value.toLowerCase();
+    function afficher(liste) {
+      const zone = document.getElementById("files");
+      zone.innerHTML = "";
 
-  files.filter(f => f.name.toLowerCase().includes(value))
-    .forEach(file => {
-      const div = document.createElement("div");
-      div.className = "file";
-      div.textContent = "⬇️ " + file.name;
-      div.onclick = () => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(file);
-        a.download = file.name;
-        a.click();
-      };
-      list.appendChild(div);
+      liste.forEach(f => {
+        zone.innerHTML += `
+          <div class="file">
+            <h3>${f.titre}</h3>
+            <p>Type : ${f.type}</p>
+            <a href="${f.download}" target="_blank">⬇️ Télécharger</a>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      const filtre = fichiers.filter(f =>
+        f.titre.toLowerCase().includes(q)
+      );
+      afficher(filtre);
     });
-}
-</script>
+  </script>
 
 </body>
 </html>
