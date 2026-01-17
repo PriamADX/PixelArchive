@@ -9,7 +9,6 @@
       background: #0f0f0f;
       color: white;
       font-family: Arial, sans-serif;
-      margin: 0;
       padding: 20px;
     }
 
@@ -39,24 +38,15 @@
       color: #00ffcc;
     }
 
-    .file p {
-      margin: 5px 0;
-      color: #aaa;
-    }
-
     .file a {
       display: inline-block;
-      margin-top: 5px;
-      color: white;
+      margin-top: 8px;
       background: #00ffcc;
+      color: black;
       padding: 6px 10px;
       border-radius: 6px;
       text-decoration: none;
       font-weight: bold;
-    }
-
-    .file a:hover {
-      background: #00cca3;
     }
   </style>
 </head>
@@ -65,7 +55,7 @@
 
   <h1>📦 PixelArchive</h1>
 
-  <input id="search" placeholder="🔍 Rechercher un fichier..." />
+  <input id="search" placeholder="🔍 rechercher un fichier" />
 
   <div id="files"></div>
 
@@ -76,26 +66,26 @@
     let fichiers = [];
 
     fetch(SHEET_URL)
-      .then(res => res.text())
+      .then(r => r.text())
       .then(text => {
         const lignes = text.split("\n").slice(1);
 
         lignes.forEach(ligne => {
           const cols = ligne.split(",");
+
           if (cols.length < 3) return;
 
-          const titre = cols[0];
-          const lien = cols[1];
-          const type = cols[2];
+          const titre = cols[1];
+          const lien = cols[2];
 
-          const match = lien.match(/\/d\/([^/]+)/);
+          const match = lien.match(/id=([^&]+)/) || lien.match(/\/d\/([^/]+)/);
           if (!match) return;
 
           const id = match[1];
           const download =
             "https://drive.google.com/uc?export=download&id=" + id;
 
-          fichiers.push({ titre, type, download });
+          fichiers.push({ titre, download });
         });
 
         afficher(fichiers);
@@ -109,7 +99,6 @@
         zone.innerHTML += `
           <div class="file">
             <h3>${f.titre}</h3>
-            <p>Type : ${f.type}</p>
             <a href="${f.download}" target="_blank">⬇️ Télécharger</a>
           </div>
         `;
@@ -118,10 +107,10 @@
 
     document.getElementById("search").addEventListener("input", e => {
       const q = e.target.value.toLowerCase();
-      const filtre = fichiers.filter(f =>
+      const res = fichiers.filter(f =>
         f.titre.toLowerCase().includes(q)
       );
-      afficher(filtre);
+      afficher(res);
     });
   </script>
 
