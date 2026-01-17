@@ -3,132 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <title>PixelArchive</title>
-
   <style>
     body {
+      font-family: Arial, sans-serif;
       background: #111;
       color: white;
-      font-family: Arial, sans-serif;
+      margin: 0;
       padding: 20px;
     }
 
     h1 {
       text-align: center;
-      color: #00ffcc;
     }
 
-    #search {
+    input {
       width: 100%;
       padding: 10px;
+      margin: 20px 0;
       font-size: 16px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: none;
     }
 
-    .file {
-      background: #222;
+    .item {
+      background: #1e1e1e;
       padding: 15px;
       margin-bottom: 10px;
-      border-radius: 10px;
+      border-radius: 8px;
     }
 
-    .file h3 {
-      margin: 0;
+    a {
       color: #00ffcc;
-    }
-
-    .file a {
-      display: inline-block;
-      margin-top: 6px;
-      background: #00ffcc;
-      color: black;
-      padding: 6px 10px;
-      border-radius: 6px;
       text-decoration: none;
       font-weight: bold;
     }
 
-    #message {
-      color: #aaa;
-      text-align: center;
-      margin-top: 20px;
+    .admin {
+      color: gold;
+      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
 
 <h1>📦 PixelArchive</h1>
 
-<input id="search" placeholder="🔍 rechercher un fichier">
+<input type="text" id="search" placeholder="🔍 Rechercher un fichier...">
 
-<div id="files"></div>
-<div id="message"></div>
+<div id="list"></div>
 
 <script>
-const SHEET_URL =
+const SHEET_CSV =
 "https://docs.google.com/spreadsheets/d/1LyUjqpyXucK97PMsuQH5wjU7PQj-LWZYunfuN1Pl5NM/export?format=csv";
 
-let fichiers = [];
+const ADMIN_MAIL = "priamadx@gmail.com";
 
-fetch(SHEET_URL)
-  .then(res => res.text())
+fetch(SHEET_CSV)
+  .then(r => r.text())
   .then(text => {
     const lignes = text.split("\n").slice(1);
-
-    lignes.forEach(ligne => {
-      // cherche un lien drive
-      const lienMatch = ligne.match(/https:\/\/drive\.google\.com[^\s"]+/);
-      if (!lienMatch) return;
-
-      const lien = lienMatch[0];
-
-      // récupère l’ID
-      const idMatch =
-        lien.match(/id=([^&]+)/) || lien.match(/\/d\/([^/]+)/);
-      if (!idMatch) return;
-
-      const id = idMatch[1];
-      const download =
-        "https://drive.google.com/uc?export=download&id=" + id;
-
-      // titre (2e colonne du form)
-      const titre = ligne.split(",")[1] || "Sans titre";
-
-      fichiers.push({ titre, download });
-    });
-
-    afficher(fichiers);
+    window.data = lignes.map(l => l.split(","));
+    afficher(data);
   });
 
-function afficher(liste) {
-  const zone = document.getElementById("files");
-  const msg = document.getElementById("message");
+function afficher(data) {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  zone.innerHTML = "";
-  msg.innerHTML = "";
+  data.forEach(ligne => {
+    if (ligne.length < 4) return;
 
-  if (liste.length === 0) {
-    msg.innerHTML = "😢 Aucun fichier trouvé";
-    return;
-  }
+    const titre = ligne[1];
+    const lien = ligne[2];
+    const mail = ligne[3];
 
-  liste.forEach(f => {
-    zone.innerHTML += `
-      <div class="file">
-        <h3>${f.titre}</h3>
-        <a href="${f.download}" target="_blank">⬇️ Télécharger</a>
-      </div>
+    if (!titre || !lien) return;
+
+    // 👤 QUI A UPLOAD
+    let pseudo = "Inconnu 👀";
+    if (mail) pseudo = mail.split("@")[0];
+
+    // 👑 BONUS ADMIN
+    let badge = "";
+    if (mail === ADMIN_MAIL) badge = " <span class='admin'>👑 ADMIN</span>";
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <h3>${titre}</h3>
+      <p>👤 Ajouté par : ${pseudo}${badge}</p>
+      <a href="${lien}" download>⬇️ Télécharger</a>
     `;
+    list.appendChild(div);
   });
 }
 
-// 🔍 recherche (NE DISPARAÎT JAMAIS)
+// 🔍 BARRE DE RECHERCHE
 document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  const filtre = fichiers.filter(f =>
-    f.titre.toLowerCase().includes(q)
+  const v = e.target.value.toLowerCase();
+  const filtre = data.filter(l =>
+    l[1] && l[1].toLowerCase().includes(v)
   );
   afficher(filtre);
 });
