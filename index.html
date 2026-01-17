@@ -79,10 +79,7 @@ function afficher(data) {
 
     // 👤 QUI A UPLOAD
     let pseudo = "Inconnu 👀";
-    const mail = ligne[3]
-  ?.replace(/\r/g, "")
-  .trim()
-  .toLowerCase();
+    if (mail) pseudo = mail.split("@")[0];
 
     // 👑 BONUS ADMIN
     let badge = "";
